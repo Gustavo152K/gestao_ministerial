@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-import { LogOut, Calendar, Users, FolderOpen, ShieldCheck, FileText, Home, UserPlus, Tag, UserCheck, Loader2, Search, Edit, Trash2 } from 'lucide-react';
+import { LogIn, Calendar, Loader2, Search, ShieldCheck } from 'lucide-react';
 
 const formatarData = (dataStr) => {
   if (!dataStr) return 'Data não definida';
@@ -21,7 +21,7 @@ const obterVoluntarios = (detalhesRaw) => {
   }
 };
 
-function Dashboard() {
+function PainelPublico() {
   const navigate = useNavigate();
   const [escalas, setEscalas] = useState([]);
   const [criancas, setCriancas] = useState([]);
@@ -40,7 +40,7 @@ function Dashboard() {
         if (escalasRes.data) setEscalas(escalasRes.data);
         if (kidsRes.data) setCriancas(kidsRes.data);
       } catch (err) {
-        console.error("Erro ao carregar dados do Dashboard:", err);
+        console.error("Erro ao carregar dados públicos:", err);
       } finally {
         setCarregando(false);
       }
@@ -48,56 +48,35 @@ function Dashboard() {
     carregarDados();
   }, []);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/');
-  };
-
-  const handleExcluirEscala = async (id) => {
-    if (window.confirm("Tem certeza que deseja excluir esta escala?")) {
-      try {
-        const { error } = await supabase.from('escalas').delete().eq('id', id);
-        if (error) throw error;
-        setEscalas(escalas.filter(e => e.id !== id));
-      } catch (err) {
-        console.error("Erro ao excluir escala:", err);
-        alert("Erro ao excluir escala. Tente novamente.");
-      }
-    }
-  };
-
   const criancasFiltradas = criancas.filter(c =>
     (c.nome_crianca || '').toLowerCase().includes(buscaKids.toLowerCase()) ||
     (c.responsavel || '').toLowerCase().includes(buscaKids.toLowerCase())
   );
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
-      <aside className="w-64 bg-gray-900 text-white flex flex-col shadow-xl h-screen sticky top-0 self-start">
-        <div className="p-6 border-b border-gray-700">
-          <h2 className="text-xl font-extrabold text-white">Gestão Ministerial</h2>
+    <div className="min-h-screen bg-gray-100 flex flex-col font-sans">
+      {/* Top Navbar */}
+      <header className="bg-blue-900 text-white shadow-md">
+        <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-extrabold tracking-tight">Gestão Ministerial</h1>
+            <p className="text-xs font-bold text-blue-200">Painel Público de Escalas e Acompanhamento Infantil</p>
+          </div>
+          <button 
+            onClick={() => navigate('/')} 
+            className="flex items-center gap-2 bg-blue-800 hover:bg-blue-700 text-white font-extrabold px-5 py-2.5 rounded-lg border-2 border-blue-600 transition-colors shadow-md text-sm"
+          >
+            <LogIn size={18} /> Acessar Sistema
+          </button>
         </div>
-        <nav className="flex-1 px-4 py-6 space-y-4 overflow-y-auto">
-          <p className="text-xs font-black text-gray-500 uppercase px-4">Principal</p>
-          <Link to="/dashboard" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-800 rounded font-bold"><Home size={18} /> Dashboard</Link>
-          <Link to="/escalas" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-800 rounded font-bold"><Calendar size={18} /> Escalas</Link>
-          <Link to="/repositorio" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-800 rounded font-bold"><FolderOpen size={18} /> Mídias</Link>
-          <Link to="/kids" className="flex items-center gap-3 px-4 py-3 hover:bg-gray-800 rounded font-bold text-sm"><ShieldCheck size={18} /> Check-in Kids</Link>
-          <Link to="/cadastro-kids" className="flex items-center gap-3 px-4 py-3 hover:bg-gray-800 rounded font-bold text-sm"><UserCheck size={18} /> Cadastrar Crianças</Link>
-          
-          <p className="text-xs font-black text-gray-500 uppercase px-4 pt-4">Cadastros</p>
-          <Link to="/membros" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-800 rounded font-bold"><UserPlus size={18} /> Membros</Link>
-          <Link to="/funcoes" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-800 rounded font-bold"><Tag size={18} /> Funções</Link>
-          <Link to="/cadastro-usuarios" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-800 rounded font-bold"><Users size={18} /> Operadores</Link>
-        </nav>
-        <button onClick={handleLogout} className="m-4 bg-red-700 py-3 rounded font-bold text-white">Sair</button>
-      </aside>
+      </header>
 
-      <main className="flex-1 p-8">
+      {/* Main Content Area */}
+      <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">Visão Geral</h1>
-            <p className="text-sm font-bold text-gray-500">Gestão ministerial e acompanhamento infantil</p>
+            <h2 className="text-3xl font-extrabold tracking-tight text-gray-900">Visão Geral</h2>
+            <p className="text-sm font-bold text-gray-500">Consulte escalas ativas ou crianças presentes na sala</p>
           </div>
           
           {/* Seletor de Abas */}
@@ -120,43 +99,26 @@ function Dashboard() {
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              Espaço Kids (Painel dos Pais)
+              Espaço Kids (Visão dos Pais)
             </button>
           </div>
         </div>
 
         {carregando ? (
-          <div className="flex items-center gap-2 font-bold"><Loader2 className="animate-spin text-blue-800" /> Carregando...</div>
+          <div className="flex items-center gap-2 font-bold justify-center py-12">
+            <Loader2 className="animate-spin text-blue-800" size={28} /> 
+            <span className="text-lg text-gray-700">Carregando painel público...</span>
+          </div>
         ) : activeTab === 'escalas' ? (
-          /* ABA DE ESCALAS */
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          /* ABA DE ESCALAS (PÚBLICA) */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {escalas.map((escala) => {
               const listaVoluntarios = obterVoluntarios(escala.detalhes_voluntarios);
               return (
-                <div key={escala.id} className="bg-white p-5 rounded shadow border-l-4 border-blue-600 flex flex-col justify-between">
+                <div key={escala.id} className="bg-white p-6 rounded-xl shadow border-l-4 border-blue-600 flex flex-col justify-between border-2 border-gray-300">
                   <div>
-                    <div className="flex justify-between items-start gap-4 mb-2">
-                      <div>
-                        <h3 className="text-lg font-extrabold text-gray-900">{escala.ministerio_responsavel}</h3>
-                        <p className="text-sm font-bold text-gray-600">{formatarData(escala.data_escala)}</p>
-                      </div>
-                      <div className="flex gap-1 shrink-0">
-                        <button
-                          onClick={() => navigate(`/escalas?id=${escala.id}`)}
-                          className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
-                          title="Editar Escala"
-                        >
-                          <Edit size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleExcluirEscala(escala.id)}
-                          className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
-                          title="Excluir Escala"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </div>
+                    <h3 className="text-xl font-extrabold text-gray-900 mb-1">{escala.ministerio_responsavel}</h3>
+                    <p className="text-sm font-bold text-gray-600 mb-4">{formatarData(escala.data_escala)}</p>
                     
                     {listaVoluntarios.length > 0 ? (
                       <div className="space-y-2 mt-4">
@@ -178,12 +140,12 @@ function Dashboard() {
             })}
           </div>
         ) : (
-          /* ABA DO ESPAÇO KIDS (PAINEL DOS PAIS) */
+          /* ABA DO ESPAÇO KIDS (PÚBLICA - COM PRIVACIDADE EXTREMA) */
           <div className="space-y-6">
             {/* Resumo e Busca */}
             <div className="bg-white border-2 border-gray-300 p-6 rounded-xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <span className="text-sm font-black text-blue-800 uppercase tracking-wider">Status da Sala</span>
+                <span className="text-sm font-black text-blue-800 uppercase tracking-wider">Sala Infantil</span>
                 <h2 className="text-2xl font-extrabold text-gray-900 mt-1">
                   Crianças na Sala: <span className="text-green-600">{criancas.length}</span>
                 </h2>
@@ -191,7 +153,7 @@ function Dashboard() {
               <div className="relative flex-1 max-w-md">
                 <input
                   type="text"
-                  placeholder="Buscar pelo nome da criança ou pai/mãe..."
+                  placeholder="Buscar pelo nome da criança ou pai..."
                   className="w-full pl-10 pr-4 py-3 border-2 border-gray-400 rounded-lg font-bold placeholder-gray-600 focus:outline-none focus:ring-4 focus:ring-blue-600"
                   value={buscaKids}
                   onChange={(e) => setBuscaKids(e.target.value)}
@@ -202,7 +164,7 @@ function Dashboard() {
               </div>
             </div>
 
-            {/* Lista de Crianças */}
+            {/* Lista de Crianças (Informações Protegidas) */}
             {criancasFiltradas.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {criancasFiltradas.map((c) => (
@@ -217,24 +179,14 @@ function Dashboard() {
                       
                       <div className="space-y-2 text-base">
                         <p className="font-semibold text-gray-800">
-                          <span className="font-bold text-gray-500">Pai/Mãe:</span> {c.responsavel}
+                          <span className="font-bold text-gray-500">Pai/Responsável:</span> {c.responsavel}
                         </p>
-                        {c.telefone && (
-                          <p className="font-semibold text-gray-800">
-                            <span className="font-bold text-gray-500">Contato:</span> {c.telefone}
-                          </p>
-                        )}
                         <p className="font-semibold text-gray-800">
                           <span className="font-bold text-gray-500">Entrada:</span> {c.hora_entrada || 'Não informada'}
                         </p>
                       </div>
 
-                      {c.alergia && c.alergia !== 'Nenhuma' && (
-                        <div className="mt-4 p-3 bg-red-50 border-l-4 border-red-600 rounded">
-                          <p className="text-red-900 font-extrabold text-sm uppercase tracking-wide">Atenção Médica / Alergia</p>
-                          <p className="text-red-800 font-bold text-sm mt-0.5">{c.alergia}</p>
-                        </div>
-                      )}
+                      {/* AVISO IMPORTANTE: Telefones de contato e Alergias NÃO são exibidos na página pública para proteger a privacidade das crianças e cumprir regras de segurança. */}
                     </div>
                   </div>
                 ))}
@@ -256,4 +208,4 @@ function Dashboard() {
   );
 }
 
-export default Dashboard;
+export default PainelPublico;

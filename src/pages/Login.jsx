@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../supabaseClient';
-import { Lock, Mail } from 'lucide-react';
+import { Lock, Mail, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 function Login() {
@@ -8,6 +8,7 @@ function Login() {
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
   const [mensagem, setMensagem] = useState('');
+  const [mostrarSenha, setMostrarSenha] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -83,13 +84,20 @@ function Login() {
               </div>
               <input
                 id="senha"
-                type="password"
+                type={mostrarSenha ? 'text' : 'password'}
                 required
-                className="block w-full pl-12 pr-3 py-3 border-2 border-gray-400 rounded-md text-gray-900 font-medium placeholder-gray-600 focus:outline-none focus:ring-4 focus:ring-blue-600 focus:border-blue-700 bg-gray-50"
+                className="block w-full pl-12 pr-10 py-3 border-2 border-gray-400 rounded-md text-gray-900 font-medium placeholder-gray-600 focus:outline-none focus:ring-4 focus:ring-blue-600 focus:border-blue-700 bg-gray-50"
                 placeholder="••••••••"
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
               />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-800 hover:text-gray-600 focus:outline-none"
+                onClick={() => setMostrarSenha(!mostrarSenha)}
+              >
+                {mostrarSenha ? <EyeOff className="h-6 w-6" /> : <Eye className="h-6 w-6" />}
+              </button>
             </div>
           </div>
 
@@ -106,6 +114,16 @@ function Login() {
           >
             {loading ? 'Autenticando...' : 'Entrar no Sistema'}
           </button>
+
+          <div className="text-center pt-2">
+            <button
+              type="button"
+              onClick={() => navigate('/publico')}
+              className="text-blue-800 hover:text-blue-900 font-extrabold text-base transition-colors hover:underline"
+            >
+              Visualizar escalas sem login (Painel Público)
+            </button>
+          </div>
         </form>
       </div>
     </div>

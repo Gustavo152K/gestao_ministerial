@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-import { Trash2, Plus, ArrowLeft } from 'lucide-react';
+import { Trash2, Plus, ArrowLeft, Edit } from 'lucide-react';
 
 function CadastroFuncoes() {
   const navigate = useNavigate();
   const [funcao, setFuncao] = useState('');
   const [lista, setLista] = useState([]);
+  const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
     carregarFuncoes();
@@ -30,18 +31,30 @@ function CadastroFuncoes() {
     e.preventDefault();
     if (!funcao.trim()) return;
 
-    // 1. Inserimos no banco
-    const { error } = await supabase
-      .from('funcoes')
-      .insert([{ nome_funcao: funcao }]);
+    if (editingId) {
+      const { error } = await supabase
+        .from('funcoes')
+        .update({ nome_funcao: funcao })
+        .eq('id', editingId);
 
-    if (error) {
-      alert("Erro ao salvar função: " + error.message);
+      if (error) {
+        alert("Erro ao atualizar função: " + error.message);
+      } else {
+        setFuncao('');
+        setEditingId(null);
+        await carregarFuncoes();
+      }
     } else {
-      // 2. Limpamos o campo
-      setFuncao('');
-      // 3. Aguardamos a atualização da lista do banco antes de renderizar
-      await carregarFuncoes();
+      const { error } = await supabase
+        .from('funcoes')
+        .insert([{ nome_funcao: funcao }]);
+
+      if (error) {
+        alert("Erro ao salvar função: " + error.message);
+      } else {
+        setFuncao('');
+        await carregarFuncoes();
+      }
     }
   };
 
@@ -74,18 +87,42 @@ function CadastroFuncoes() {
             placeholder="Ex: Músico, Obreiro..."
             required
           />
-          <button type="submit" className="bg-blue-800 text-white px-6 py-3 rounded-lg font-bold flex items-center gap-2 hover:bg-blue-900 transition-colors">
-            <Plus size={20} /> Salvar
-          </button>
+          {editingId ? (
+            <>
+              <button type="submit" className="bg-green-700 text-white px-6 py-3 rounded-lg font-bold hover:bg-green-800 transition-colors">
+                Atualizar
+              </button>
+              <button 
+                type="button" 
+                onClick={() => { setFuncao(''); setEditingId(null); }}
+                className="bg-gray-500 text-white px-6 py-3 rounded-lg font-bold hover:bg-gray-600 transition-colors"
+              >
+                Cancelar
+              </button>
+            </>
+          ) : (
+            <button type="submit" className="bg-blue-800 text-white px-6 py-3 rounded-lg font-bold flex items-center gap-2 hover:bg-blue-900 transition-colors">
+              <Plus size={20} /> Salvar
+            </button>
+          )}
         </form>
 
         <ul className="space-y-2">
           {lista.map(f => (
             <li key={f.id} className="flex justify-between items-center p-4 bg-gray-100 rounded-lg font-bold border-2 border-gray-200">
               {f.nome_funcao}
-              <button onClick={() => excluirFuncao(f.id)} className="text-red-600 hover:text-red-800 transition-colors">
-                <Trash2 size={20} />
-              </button>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => { setFuncao(f.nome_funcao); setEditingId(f.id); }} 
+                  className="text-blue-600 hover:text-blue-800 transition-colors"
+                  title="Editar Função"
+                >
+                  <Edit size={20} />
+                </button>
+                <button onClick={() => excluirFuncao(f.id)} className="text-red-600 hover:text-red-800 transition-colors" title="Excluir Função">
+                  <Trash2 size={20} />
+                </button>
+              </div>
             </li>
           ))}
         </ul>
