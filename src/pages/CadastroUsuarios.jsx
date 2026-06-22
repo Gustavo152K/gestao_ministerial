@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { createClient } from '@supabase/supabase-js';
 import { ArrowLeft, UserPlus, Loader2, KeyRound, Mail, Trash2, Edit } from 'lucide-react';
 import { supabase } from '../supabaseClient';
+import ConfirmModal from '../components/ConfirmModal';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -21,6 +22,10 @@ function CadastroUsuarios() {
   const [editingUser, setEditingUser] = useState(null); // ID do operador sendo editado
   const [novaSenha, setNovaSenha] = useState('');
   const [loadingAcao, setLoadingAcao] = useState(false);
+
+  // Estados para modal de exclusão
+  const [modalOpen, setModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
 
   useEffect(() => {
     carregarOperadores();
@@ -77,19 +82,26 @@ function CadastroUsuarios() {
     }
   };
 
-  const handleExcluir = async (id, userEmail) => {
-    if (confirm(`Deseja realmente excluir o operador "${userEmail}"? Ele perderá o acesso imediatamente.`)) {
-      setLoadingAcao(true);
-      try {
-        const { error } = await supabase.rpc('delete_user_by_id', { user_uuid: id });
-        if (error) throw error;
-        setOperadores(operadores.filter(op => op.id !== id));
-      } catch (err) {
-        console.error("Erro ao excluir operador:", err);
-        alert("Erro ao excluir operador: " + err.message);
-      } finally {
-        setLoadingAcao(false);
-      }
+  const iniciarExclusao = (id, userEmail) => {
+    setUserToDelete({ id, userEmail });
+    setModalOpen(true);
+  };
+
+  const confirmarExclusao = async () => {
+    if (!userToDelete) return;
+    const { id } = userToDelete;
+    setLoadingAcao(true);
+    try {
+      const { error } = await supabase.rpc('delete_user_by_id', { user_uuid: id });
+      if (error) throw error;
+      setOperadores(operadores.filter(op => op.id !== id));
+    } catch (err) {
+      console.error("Erro ao excluir operador:", err);
+      alert("Erro ao excluir operador: " + err.message);
+    } finally {
+      setLoadingAcao(false);
+      setModalOpen(false);
+      setUserToDelete(null);
     }
   };
 
@@ -281,7 +293,7 @@ function CadastroUsuarios() {
                               <Edit size={18} />
                             </button>
                             <button 
-                              onClick={() => handleExcluir(op.id, op.email)}
+                              onClick={() => iniciarExclusao(op.id, op.email)}
                               className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
                               title="Excluir Operador"
                               disabled={loadingAcao}
@@ -303,6 +315,17 @@ function CadastroUsuarios() {
           )}
         </section>
       </main>
+
+      <ConfirmModal
+        isOpen={modalOpen}
+        onClose={() => { setModalOpen(false); setUserToDelete(null); }}
+        onConfirm={confirmarExclusao}
+        title="Excluir Operador"
+        message={userToDelete ? `Deseja realmente excluir permanentemente o operador "${userToDelete.userEmail}"? Ele perderá todo o acesso imediatamente.` : ''}
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        variant="danger"
+      />
     </div>
   );
 }

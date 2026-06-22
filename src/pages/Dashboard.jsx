@@ -72,28 +72,7 @@ function Dashboard() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
-      <aside className="w-64 bg-gray-900 text-white flex flex-col shadow-xl h-screen sticky top-0 self-start">
-        <div className="p-6 border-b border-gray-700">
-          <h2 className="text-xl font-extrabold text-white">Gestão Ministerial</h2>
-        </div>
-        <nav className="flex-1 px-4 py-6 space-y-4 overflow-y-auto">
-          <p className="text-xs font-black text-gray-500 uppercase px-4">Principal</p>
-          <Link to="/dashboard" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-800 rounded font-bold"><Home size={18} /> Dashboard</Link>
-          <Link to="/escalas" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-800 rounded font-bold"><Calendar size={18} /> Escalas</Link>
-          <Link to="/repositorio" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-800 rounded font-bold"><FolderOpen size={18} /> Mídias</Link>
-          <Link to="/kids" className="flex items-center gap-3 px-4 py-3 hover:bg-gray-800 rounded font-bold text-sm"><ShieldCheck size={18} /> Check-in Kids</Link>
-          <Link to="/cadastro-kids" className="flex items-center gap-3 px-4 py-3 hover:bg-gray-800 rounded font-bold text-sm"><UserCheck size={18} /> Cadastrar Crianças</Link>
-          
-          <p className="text-xs font-black text-gray-500 uppercase px-4 pt-4">Cadastros</p>
-          <Link to="/membros" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-800 rounded font-bold"><UserPlus size={18} /> Membros</Link>
-          <Link to="/funcoes" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-800 rounded font-bold"><Tag size={18} /> Funções</Link>
-          <Link to="/cadastro-usuarios" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-800 rounded font-bold"><Users size={18} /> Operadores</Link>
-        </nav>
-        <button onClick={handleLogout} className="m-4 bg-red-700 py-3 rounded font-bold text-white">Sair</button>
-      </aside>
-
-      <main className="flex-1 p-8">
+    <div className="flex-1 p-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">Visão Geral</h1>
@@ -126,10 +105,10 @@ function Dashboard() {
         </div>
 
         {carregando ? (
-          <div className="flex items-center gap-2 font-bold"><Loader2 className="animate-spin text-blue-800" /> Carregando...</div>
+          <div key="loading-dashboard" className="flex items-center gap-2 font-bold"><Loader2 className="animate-spin text-blue-800" /> Carregando...</div>
         ) : activeTab === 'escalas' ? (
           /* ABA DE ESCALAS */
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div key="scales-tab" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {escalas.map((escala) => {
               const listaVoluntarios = obterVoluntarios(escala.detalhes_voluntarios);
               return (
@@ -162,8 +141,8 @@ function Dashboard() {
                       <div className="space-y-2 mt-4">
                         <p className="text-xs font-black text-gray-500 uppercase tracking-wider">Voluntários Escalados</p>
                         <div className="flex flex-wrap gap-2">
-                          {listaVoluntarios.map((vol) => (
-                            <span key={vol.id} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-900 border-2 border-blue-200">
+                          {listaVoluntarios.map((vol, idx) => (
+                            <span key={vol.id || `vol-${idx}`} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-900 border-2 border-blue-200">
                               {vol.nome} <span className="text-gray-500 font-normal">({vol.funcao})</span>
                             </span>
                           ))}
@@ -179,7 +158,7 @@ function Dashboard() {
           </div>
         ) : (
           /* ABA DO ESPAÇO KIDS (PAINEL DOS PAIS) */
-          <div className="space-y-6">
+          <div key="kids-tab" className="space-y-6">
             {/* Resumo e Busca */}
             <div className="bg-white border-2 border-gray-300 p-6 rounded-xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
@@ -204,9 +183,9 @@ function Dashboard() {
 
             {/* Lista de Crianças */}
             {criancasFiltradas.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {criancasFiltradas.map((c) => (
-                  <div key={c.id} className="bg-white border-2 border-gray-300 p-6 rounded-xl shadow-sm flex flex-col justify-between">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {criancasFiltradas.map((c, idx) => (
+                  <div key={c.id || `child-${idx}`} className="bg-white border-2 border-gray-300 p-6 rounded-xl shadow-sm flex flex-col justify-between">
                     <div>
                       <div className="flex justify-between items-start gap-2 mb-3">
                         <h3 className="text-2xl font-extrabold text-gray-900 leading-tight">{c.nome_crianca}</h3>
@@ -251,7 +230,6 @@ function Dashboard() {
             )}
           </div>
         )}
-      </main>
     </div>
   );
 }
