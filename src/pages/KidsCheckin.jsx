@@ -164,12 +164,12 @@ function KidsCheckin() {
         </div>
 
         {carregando ? (
-          <div className="flex justify-center py-12"><Loader2 className="animate-spin text-blue-800" size={40}/></div>
+          <div key="loading-kids-checkin" className="flex justify-center py-12"><Loader2 className="animate-spin text-blue-800" size={40}/></div>
         ) : (
-          <div className="space-y-4">
+          <div key="kids-checkin-list" className="space-y-4">
             {criancasFiltradas.length > 0 ? (
-              criancasFiltradas.map((crianca) => (
-                <div key={crianca.id} className="p-6 border-2 border-gray-300 rounded-xl bg-gray-50 shadow-sm flex flex-col justify-between">
+              criancasFiltradas.map((crianca, idx) => (
+                <div key={crianca.id || `child-${idx}`} className="p-6 border-2 border-gray-300 rounded-xl bg-gray-50 shadow-sm flex flex-col justify-between">
                   <div>
                     <div className="flex justify-between items-start gap-4 mb-2">
                       <h2 className="text-2xl font-extrabold text-gray-900 leading-tight">{crianca.nome_crianca}</h2>

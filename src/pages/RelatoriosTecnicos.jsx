@@ -235,17 +235,17 @@ function RelatoriosTecnicos() {
             </div>
 
             {carregandoKids ? (
-              <div className="flex items-center justify-center gap-2 font-bold py-12 text-gray-600">
+              <div key="loading-kids-history" className="flex items-center justify-center gap-2 font-bold py-12 text-gray-600">
                 <Loader2 className="animate-spin text-blue-800" /> Carregando histórico infantil...
               </div>
             ) : (
-              <section>
+              <section key="kids-history-section">
                 <h2 className="text-2xl font-extrabold text-gray-900 mb-6 flex items-center gap-3 border-b-2 border-gray-300 pb-2">
                   <FileText className="text-blue-800" size={28} /> Controle de Dias e Horários - Kids
                 </h2>
                 
                 {logsFiltrados.length > 0 ? (
-                  <div className="overflow-x-auto border-2 border-gray-400 rounded-lg">
+                  <div key="kids-history-table" className="overflow-x-auto border-2 border-gray-400 rounded-lg">
                     <table className="w-full text-left border-collapse">
                       <thead>
                         <tr className="bg-gray-900 text-white text-base">
@@ -261,7 +261,7 @@ function RelatoriosTecnicos() {
                         {logsFiltrados.map((log, index) => {
                           const dataFormatada = new Date(log.created_at).toLocaleDateString('pt-BR');
                           return (
-                            <tr key={log.id} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                            <tr key={log.id || `log-${index}`} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
                               <td className="p-4 border-b border-gray-300 text-base font-bold text-gray-900">{dataFormatada}</td>
                               <td className="p-4 border-b border-gray-300 text-base font-bold text-gray-900">{log.nome_crianca}</td>
                               <td className="p-4 border-b border-gray-300 text-base text-gray-800 font-semibold">

@@ -236,11 +236,11 @@ function CadastroUsuarios() {
           </div>
 
           {loadingList ? (
-            <div className="p-8 text-center flex items-center justify-center gap-2 font-bold text-gray-600">
+            <div key="loading-operators" className="p-8 text-center flex items-center justify-center gap-2 font-bold text-gray-600">
               <Loader2 className="animate-spin text-blue-800" /> Carregando operadores...
             </div>
           ) : operadores.length > 0 ? (
-            <div className="overflow-x-auto">
+            <div key="operators-table" className="overflow-x-auto">
               <table className="w-full text-left font-bold border-collapse">
                 <thead>
                   <tr className="bg-gray-100 border-b-2 border-gray-300 text-gray-700 text-sm">
@@ -250,8 +250,8 @@ function CadastroUsuarios() {
                   </tr>
                 </thead>
                 <tbody>
-                  {operadores.map((op) => (
-                    <tr key={op.id} className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                  {operadores.map((op, idx) => (
+                    <tr key={op.id || `op-${idx}`} className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
                       <td className="p-4 text-gray-900">{op.email}</td>
                       <td className="p-4 text-gray-600 text-sm">
                         {new Date(op.created_at).toLocaleDateString('pt-BR')} às {new Date(op.created_at).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
@@ -309,7 +309,7 @@ function CadastroUsuarios() {
               </table>
             </div>
           ) : (
-            <div className="p-8 text-center text-gray-500 font-bold">
+            <div key="no-operators" className="p-8 text-center text-gray-500 font-bold">
               Nenhum operador cadastrado.
             </div>
           )}

@@ -152,11 +152,11 @@ function GestaoEscalas() {
 
         <section className="mb-10 p-6 bg-blue-50 rounded-xl border-2 border-blue-200">
           <h2 className="text-2xl font-extrabold text-blue-900 mb-4 flex items-center gap-3"><Users className="text-blue-800" /> Adicionar Voluntário</h2>
-          {carregando ? <Loader2 className="animate-spin" /> : (
-            <form onSubmit={handleAdicionarVoluntario} className="flex gap-4">
+          {carregando ? <Loader2 key="loading-scales-add" className="animate-spin" /> : (
+            <form key="add-volunteer-form" onSubmit={handleAdicionarVoluntario} className="flex gap-4">
               <select className="flex-1 p-3 border-2 rounded-lg font-bold" value={voluntarioSelecionado} onChange={(e) => setVoluntarioSelecionado(e.target.value)}>
                 <option value="">Selecione um membro cadastrado...</option>
-                {membros.map(m => <option key={m.id} value={m.id}>{m.nome} ({m.funcoes?.nome_funcao})</option>)}
+                {membros.map((m, idx) => <option key={m.id || `member-${idx}`} value={m.id}>{m.nome} ({m.funcoes?.nome_funcao})</option>)}
               </select>
               <button className="bg-blue-800 text-white px-6 py-3 rounded-lg font-extrabold flex items-center gap-2"><Plus /> Add</button>
             </form>
@@ -165,8 +165,8 @@ function GestaoEscalas() {
 
         <section className="mb-10">
           <ul className="space-y-3">
-            {listaEscalados.map((item) => (
-              <li key={item.id} className="flex justify-between items-center p-4 bg-white border-2 rounded-lg shadow-sm">
+            {listaEscalados.map((item, idx) => (
+              <li key={item.id || `escalado-${idx}`} className="flex justify-between items-center p-4 bg-white border-2 rounded-lg shadow-sm">
                 <div>
                   <p className="text-xl font-extrabold">{item.nome}</p>
                   <p className="text-sm bg-gray-200 inline-block px-2 rounded font-bold">{item.funcao}</p>

@@ -105,17 +105,17 @@ function PainelPublico() {
         </div>
 
         {carregando ? (
-          <div className="flex items-center gap-2 font-bold justify-center py-12">
+          <div key="loading-public" className="flex items-center gap-2 font-bold justify-center py-12">
             <Loader2 className="animate-spin text-blue-800" size={28} /> 
             <span className="text-lg text-gray-700">Carregando painel público...</span>
           </div>
         ) : activeTab === 'escalas' ? (
           /* ABA DE ESCALAS (PÚBLICA) */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {escalas.map((escala) => {
+          <div key="public-scales-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {escalas.map((escala, idx) => {
               const listaVoluntarios = obterVoluntarios(escala.detalhes_voluntarios);
               return (
-                <div key={escala.id} className="bg-white p-6 rounded-xl shadow border-l-4 border-blue-600 flex flex-col justify-between border-2 border-gray-300">
+                <div key={escala.id || `escala-${idx}`} className="bg-white p-6 rounded-xl shadow border-l-4 border-blue-600 flex flex-col justify-between border-2 border-gray-300">
                   <div>
                     <h3 className="text-xl font-extrabold text-gray-900 mb-1">{escala.ministerio_responsavel}</h3>
                     <p className="text-sm font-bold text-gray-600 mb-4">{formatarData(escala.data_escala)}</p>
@@ -124,8 +124,8 @@ function PainelPublico() {
                       <div className="space-y-2 mt-4">
                         <p className="text-xs font-black text-gray-500 uppercase tracking-wider">Voluntários Escalados</p>
                         <div className="flex flex-wrap gap-2">
-                          {listaVoluntarios.map((vol) => (
-                            <span key={vol.id} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-900 border-2 border-blue-200">
+                          {listaVoluntarios.map((vol, vIdx) => (
+                            <span key={vol.id || `vol-${vIdx}`} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-900 border-2 border-blue-200">
                               {vol.nome} <span className="text-gray-500 font-normal">({vol.funcao})</span>
                             </span>
                           ))}
@@ -141,7 +141,7 @@ function PainelPublico() {
           </div>
         ) : (
           /* ABA DO ESPAÇO KIDS (PÚBLICA - COM PRIVACIDADE EXTREMA) */
-          <div className="space-y-6">
+          <div key="public-kids-tab" className="space-y-6">
             {/* Resumo e Busca */}
             <div className="bg-white border-2 border-gray-300 p-6 rounded-xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
@@ -166,9 +166,9 @@ function PainelPublico() {
 
             {/* Lista de Crianças (Informações Protegidas) */}
             {criancasFiltradas.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {criancasFiltradas.map((c) => (
-                  <div key={c.id} className="bg-white border-2 border-gray-300 p-6 rounded-xl shadow-sm flex flex-col justify-between">
+              <div key="public-kids-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {criancasFiltradas.map((c, idx) => (
+                  <div key={c.id || `child-${idx}`} className="bg-white border-2 border-gray-300 p-6 rounded-xl shadow-sm flex flex-col justify-between">
                     <div>
                       <div className="flex justify-between items-start gap-2 mb-3">
                         <h3 className="text-2xl font-extrabold text-gray-900 leading-tight">{c.nome_crianca}</h3>
