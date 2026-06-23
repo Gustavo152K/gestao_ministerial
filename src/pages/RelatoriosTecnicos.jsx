@@ -9,14 +9,15 @@ function RelatoriosTecnicos() {
   // Estados de Abas de Relatório: 'voluntarios' ou 'kids'
   const [activeReportTab, setActiveReportTab] = useState('voluntarios');
 
-  // Dados extraídos diretamente do TCC (RF01 - Assiduidade)
-  const [voluntarios, setVoluntarios] = useState([
-    { id: 1, nome: 'Gustavo Henrique', ministerio: 'Louvor (Líder)', escalas: 8, presencas: 8, aproveitamento: '100%' },
-    { id: 2, nome: 'Ana Julia Santos', ministerio: 'Kids', escalas: 6, presencas: 5, aproveitamento: '83%' },
-    { id: 3, nome: 'Carlos Eduardo Lima', ministerio: 'Mídia', escalas: 4, presencas: 3, aproveitamento: '75%' },
-    { id: 4, nome: 'Mariana Costa Ferreira', ministerio: 'Louvor', escalas: 5, presencas: 5, aproveitamento: '100%' },
-    { id: 5, nome: 'Lucas de Souza Ramos', ministerio: 'Kids', escalas: 4, presencas: 2, aproveitamento: '50%' },
-  ]);
+  // Estados para o Relatório de Voluntários (Dados Reais do Banco)
+  const [voluntarios, setVoluntarios] = useState([]);
+  const [carregandoVoluntarios, setCarregandoVoluntarios] = useState(true);
+  const [indicadoresVoluntarios, setIndicadoresVoluntarios] = useState({
+    vagasEscaladas: 0,
+    taxaPresenca: 0,
+    faltasJustificadas: 0,
+    faltasSemJustificativa: 0
+  });
 
   // Estados para o Relatório do Espaço Kids (Dados do Banco)
   const [kidsLogs, setKidsLogs] = useState([]);
@@ -25,10 +26,111 @@ function RelatoriosTecnicos() {
   const [filtroData, setFiltroData] = useState(''); // Filtro por data YYYY-MM-DD
 
   useEffect(() => {
-    if (activeReportTab === 'kids') {
+    if (activeReportTab === 'voluntarios') {
+      carregarVoluntariosStats();
+    } else if (activeReportTab === 'kids') {
       carregarKidsLogs();
     }
   }, [activeReportTab]);
+
+  const carregarVoluntariosStats = async () => {
+    setCarregandoVoluntarios(true);
+    try {
+      const { data: escalasData, error } = await supabase
+        .from('escalas')
+        .select('*');
+
+      if (error) throw error;
+
+      let totalVagas = 0;
+      let totalPresencas = 0;
+      let totalJustificadas = 0;
+      let totalSemJustificativa = 0;
+
+      const voluntarioMap = {};
+
+      const obterVoluntariosAux = (detalhesRaw) => {
+        try {
+          if (!detalhesRaw) return [];
+          if (typeof detalhesRaw === 'object') return detalhesRaw;
+          const parsed = JSON.parse(detalhesRaw);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch (err) {
+          console.error("Erro ao parsear detalhes dos voluntários:", err);
+          return [];
+        }
+      };
+
+      (escalasData || []).forEach(escala => {
+        const lista = obterVoluntariosAux(escala.detalhes_voluntarios);
+        const ministerio = escala.ministerio_responsavel || 'N/A';
+        
+        lista.forEach(vol => {
+          totalVagas++;
+          const statusPresenca = vol.presenca || 'Confirmada';
+          
+          if (statusPresenca === 'Confirmada') {
+            totalPresencas++;
+          } else if (statusPresenca === 'Falta Justificada') {
+            totalJustificadas++;
+          } else if (statusPresenca === 'Falta Sem Justificativa') {
+            totalSemJustificativa++;
+          }
+
+          const nomeUnico = vol.nome ? vol.nome.trim() : '';
+          if (!nomeUnico) return;
+
+          if (!voluntarioMap[nomeUnico]) {
+            voluntarioMap[nomeUnico] = {
+              nome: nomeUnico,
+              ministerios: new Set(),
+              escalas: 0,
+              presencas: 0
+            };
+          }
+          
+          voluntarioMap[nomeUnico].escalas++;
+          if (statusPresenca === 'Confirmada') {
+            voluntarioMap[nomeUnico].presencas++;
+          }
+          voluntarioMap[nomeUnico].ministerios.add(ministerio);
+        });
+      });
+
+      const taxa = totalVagas > 0 
+        ? Math.round((totalPresencas / totalVagas) * 100) 
+        : 0;
+
+      setIndicadoresVoluntarios({
+        vagasEscaladas: totalVagas,
+        taxaPresenca: taxa,
+        faltasJustificadas: totalJustificadas,
+        faltasSemJustificativa: totalSemJustificativa
+      });
+
+      const listaVoluntarios = Object.values(voluntarioMap).map((vol, index) => {
+        const aproveitamentoPercent = vol.escalas > 0 
+          ? Math.round((vol.presencas / vol.escalas) * 100) 
+          : 0;
+        
+        return {
+          id: index + 1,
+          nome: vol.nome,
+          ministerio: Array.from(vol.ministerios).join(', '),
+          escalas: vol.escalas,
+          presencas: vol.presencas,
+          aproveitamento: `${aproveitamentoPercent}%`
+        };
+      });
+
+      listaVoluntarios.sort((a, b) => a.nome.localeCompare(b.nome));
+      setVoluntarios(listaVoluntarios);
+    } catch (err) {
+      console.error("Erro ao carregar estatísticas de voluntários:", err);
+    } finally {
+      setCarregandoVoluntarios(false);
+    }
+  };
 
   const carregarKidsLogs = async () => {
     setCarregandoKids(true);
@@ -125,76 +227,90 @@ function RelatoriosTecnicos() {
             <div className="flex items-center gap-3 bg-blue-50 border-2 border-blue-800 p-4 rounded-lg">
               <Filter className="text-blue-900" size={24} />
               <p className="text-lg font-bold text-blue-900">
-                Filtros Aplicados: Ministério: Todos | Status da Escala: Concluída | Presença: Confirmada/Falta
+                Filtros Aplicados: Ministério: Todos | Escalas ativas no sistema
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white border-4 border-blue-800 rounded-xl p-6 shadow-md flex flex-col items-center text-center">
-                <Users className="text-blue-800 mb-2" size={40} />
-                <span className="text-5xl font-extrabold text-gray-900">148</span>
-                <p className="text-xl font-bold text-gray-700 mt-2 uppercase">Vagas Escaladas</p>
+            {carregandoVoluntarios ? (
+              <div key="loading-voluntarios" className="flex items-center justify-center gap-2 font-bold py-12 text-gray-600">
+                <Loader2 className="animate-spin text-blue-800" /> Carregando estatísticas de voluntários...
               </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="bg-white border-4 border-blue-800 rounded-xl p-6 shadow-md flex flex-col items-center text-center">
+                    <Users className="text-blue-800 mb-2" size={40} />
+                    <span className="text-5xl font-extrabold text-gray-900">{indicadoresVoluntarios.vagasEscaladas}</span>
+                    <p className="text-xl font-bold text-gray-700 mt-2 uppercase">Vagas Escaladas</p>
+                  </div>
 
-              <div className="bg-white border-4 border-green-700 rounded-xl p-6 shadow-md flex flex-col items-center text-center">
-                <CheckCircle className="text-green-700 mb-2" size={40} />
-                <span className="text-5xl font-extrabold text-gray-900">92%</span>
-                <p className="text-xl font-bold text-gray-700 mt-2 uppercase">Taxa de Presença</p>
-              </div>
+                  <div className="bg-white border-4 border-green-700 rounded-xl p-6 shadow-md flex flex-col items-center text-center">
+                    <CheckCircle className="text-green-700 mb-2" size={40} />
+                    <span className="text-5xl font-extrabold text-gray-900">{indicadoresVoluntarios.taxaPresenca}%</span>
+                    <p className="text-xl font-bold text-gray-700 mt-2 uppercase">Taxa de Presença</p>
+                  </div>
 
-              <div className="bg-white border-4 border-yellow-500 rounded-xl p-6 shadow-md flex flex-col items-center text-center">
-                <FileText className="text-yellow-600 mb-2" size={40} />
-                <span className="text-5xl font-extrabold text-gray-900">12</span>
-                <p className="text-xl font-bold text-gray-700 mt-2 uppercase">Faltas Justificadas</p>
-              </div>
+                  <div className="bg-white border-4 border-yellow-500 rounded-xl p-6 shadow-md flex flex-col items-center text-center">
+                    <FileText className="text-yellow-600 mb-2" size={40} />
+                    <span className="text-5xl font-extrabold text-gray-900">{indicadoresVoluntarios.faltasJustificadas}</span>
+                    <p className="text-xl font-bold text-gray-700 mt-2 uppercase">Faltas Justificadas</p>
+                  </div>
 
-              <div className="bg-white border-4 border-red-700 rounded-xl p-6 shadow-md flex flex-col items-center text-center">
-                <XCircle className="text-red-700 mb-2" size={40} />
-                <span className="text-5xl font-extrabold text-gray-900">3</span>
-                <p className="text-xl font-bold text-gray-700 mt-2 uppercase">Faltas S/ Justif.</p>
-              </div>
-            </div>
+                  <div className="bg-white border-4 border-red-700 rounded-xl p-6 shadow-md flex flex-col items-center text-center">
+                    <XCircle className="text-red-700 mb-2" size={40} />
+                    <span className="text-5xl font-extrabold text-gray-900">{indicadoresVoluntarios.faltasSemJustificativa}</span>
+                    <p className="text-xl font-bold text-gray-700 mt-2 uppercase">Faltas S/ Justif.</p>
+                  </div>
+                </div>
 
-            <section>
-              <h2 className="text-2xl font-extrabold text-gray-900 mb-6 flex items-center gap-3 border-b-2 border-gray-300 pb-2">
-                <BarChart3 className="text-blue-800" size={28} /> Detalhamento por Voluntário
-              </h2>
-              
-              <div className="overflow-x-auto border-2 border-gray-400 rounded-lg">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-gray-900 text-white text-lg">
-                      <th className="p-4 border-b-2 border-gray-700 font-extrabold uppercase">Voluntário</th>
-                      <th className="p-4 border-b-2 border-gray-700 font-extrabold uppercase">Ministério</th>
-                      <th className="p-4 border-b-2 border-gray-700 font-extrabold uppercase text-center">Escalas Totais</th>
-                      <th className="p-4 border-b-2 border-gray-700 font-extrabold uppercase text-center">Presenças</th>
-                      <th className="p-4 border-b-2 border-gray-700 font-extrabold uppercase text-center">Aproveitamento</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {voluntarios.map((voluntario, index) => (
-                      <tr key={voluntario.id} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                        <td className="p-4 border-b border-gray-300 text-lg font-bold text-gray-900">{voluntario.nome}</td>
-                        <td className="p-4 border-b border-gray-300 text-lg font-bold text-gray-800">{voluntario.ministerio}</td>
-                        <td className="p-4 border-b border-gray-300 text-lg font-extrabold text-gray-900 text-center">{voluntario.escalas}</td>
-                        <td className="p-4 border-b border-gray-300 text-lg font-extrabold text-gray-900 text-center">{voluntario.presencas}</td>
-                        <td className="p-4 border-b border-gray-300 text-center">
-                          <span className={`inline-block px-3 py-1 rounded-md font-extrabold text-lg border-2 ${
-                            parseInt(voluntario.aproveitamento) >= 80 
-                              ? 'bg-green-100 text-green-900 border-green-600' 
-                              : parseInt(voluntario.aproveitamento) >= 60 
-                                ? 'bg-yellow-100 text-yellow-900 border-yellow-600'
-                                : 'bg-red-100 text-red-900 border-red-600'
-                          }`}>
-                            {voluntario.aproveitamento}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
+                <section>
+                  <h2 className="text-2xl font-extrabold text-gray-900 mb-6 flex items-center gap-3 border-b-2 border-gray-300 pb-2">
+                    <BarChart3 className="text-blue-800" size={28} /> Detalhamento por Voluntário
+                  </h2>
+                  
+                  {voluntarios.length > 0 ? (
+                    <div className="overflow-x-auto border-2 border-gray-400 rounded-lg">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-gray-900 text-white text-lg">
+                            <th className="p-4 border-b-2 border-gray-700 font-extrabold uppercase">Voluntário</th>
+                            <th className="p-4 border-b-2 border-gray-700 font-extrabold uppercase">Ministério</th>
+                            <th className="p-4 border-b-2 border-gray-700 font-extrabold uppercase text-center">Escalas Totais</th>
+                            <th className="p-4 border-b-2 border-gray-700 font-extrabold uppercase text-center">Presenças</th>
+                            <th className="p-4 border-b-2 border-gray-700 font-extrabold uppercase text-center">Aproveitamento</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {voluntarios.map((voluntario, index) => (
+                            <tr key={voluntario.id} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                              <td className="p-4 border-b border-gray-300 text-lg font-bold text-gray-900">{voluntario.nome}</td>
+                              <td className="p-4 border-b border-gray-300 text-lg font-bold text-gray-800">{voluntario.ministerio}</td>
+                              <td className="p-4 border-b border-gray-300 text-lg font-extrabold text-gray-900 text-center">{voluntario.escalas}</td>
+                              <td className="p-4 border-b border-gray-300 text-lg font-extrabold text-gray-900 text-center">{voluntario.presencas}</td>
+                              <td className="p-4 border-b border-gray-300 text-center">
+                                <span className={`inline-block px-3 py-1 rounded-md font-extrabold text-lg border-2 ${
+                                  parseInt(voluntario.aproveitamento) >= 80 
+                                    ? 'bg-green-100 text-green-900 border-green-600' 
+                                    : parseInt(voluntario.aproveitamento) >= 60 
+                                      ? 'bg-yellow-100 text-yellow-900 border-yellow-600'
+                                      : 'bg-red-100 text-red-900 border-red-600'
+                                }`}>
+                                  {voluntario.aproveitamento}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="p-12 text-center border-2 border-dashed border-gray-300 rounded-xl">
+                      <p className="text-lg text-gray-500 font-bold">Nenhum voluntário escalado até o momento.</p>
+                    </div>
+                  )}
+                </section>
+              </>
+            )}
           </div>
         ) : (
           /* RELATÓRIO DO ESPAÇO KIDS (DINÂMICO) */

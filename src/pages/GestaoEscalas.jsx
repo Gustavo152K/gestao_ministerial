@@ -75,11 +75,18 @@ function GestaoEscalas() {
     const novoEscalado = {
       id: Date.now(),
       nome: membro.nome,
-      funcao: membro.funcoes?.nome_funcao || 'N/A'
+      funcao: membro.funcoes?.nome_funcao || 'N/A',
+      presenca: 'Confirmada'
     };
 
     setListaEscalados([...listaEscalados, novoEscalado]);
     setVoluntarioSelecionado('');
+  };
+
+  const handleAlterarPresenca = (id, presenca) => {
+    setListaEscalados(listaEscalados.map(item => 
+      item.id === id ? { ...item, presenca } : item
+    ));
   };
 
   const handleSalvarEscala = async () => {
@@ -166,12 +173,23 @@ function GestaoEscalas() {
         <section className="mb-10">
           <ul className="space-y-3">
             {listaEscalados.map((item, idx) => (
-              <li key={item.id || `escalado-${idx}`} className="flex justify-between items-center p-4 bg-white border-2 rounded-lg shadow-sm">
+              <li key={item.id || `escalado-${idx}`} className="flex flex-col sm:flex-row sm:justify-between sm:items-center p-4 bg-white border-2 rounded-lg shadow-sm gap-4">
                 <div>
                   <p className="text-xl font-extrabold">{item.nome}</p>
                   <p className="text-sm bg-gray-200 inline-block px-2 rounded font-bold">{item.funcao}</p>
                 </div>
-                <button onClick={() => setListaEscalados(listaEscalados.filter(i => i.id !== item.id))} className="text-red-600"><Trash2 /></button>
+                <div className="flex items-center gap-3">
+                  <select
+                    value={item.presenca || 'Confirmada'}
+                    onChange={(e) => handleAlterarPresenca(item.id, e.target.value)}
+                    className="p-2 border-2 rounded-lg font-bold text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-600 text-gray-900"
+                  >
+                    <option value="Confirmada">Presença Confirmada</option>
+                    <option value="Falta Justificada">Falta Justificada</option>
+                    <option value="Falta Sem Justificativa">Falta S/ Justif.</option>
+                  </select>
+                  <button onClick={() => setListaEscalados(listaEscalados.filter(i => i.id !== item.id))} className="text-red-600 hover:text-red-800 p-2 rounded-lg hover:bg-red-50 transition-colors" title="Remover Voluntário"><Trash2 /></button>
+                </div>
               </li>
             ))}
           </ul>
