@@ -94,10 +94,10 @@ No coração da segurança do Supabase está o conceito de **Row Level Security 
 | **RF-01** | O sistema deve autenticar operadores por meio de e-mail e senha. |
 | **RF-02** | Os operadores autenticados devem criar, ler, editar e excluir membros e suas respectivas funções na igreja. |
 | **RF-03** | Os operadores devem gerenciar escalas indicando data, ministério responsável, status de presença dos voluntários (Confirmada, Falta Justificada, Falta Sem Justificativa) e membros alocados. |
-| **RF-04** | O sistema deve permitir o upload de conteúdos (texto/URLs) no repositório de mídias categorizados por ministério. |
+| **RF-04** | O sistema deve permitir o gerenciamento de mídias (incluindo upload, visualização, edição e exclusão) de conteúdos (texto/URLs) categorizados por ministério. |
 | **RF-05** | O sistema deve possibilitar o check-in de crianças no Espaço Kids registrando dados do responsável, telefone de contato e alergias. |
 | **RF-06** | O sistema deve gerenciar a saída (check-out) de crianças, calculando o tempo de permanência e arquivando-as no histórico permanente de presença. |
-| **RF-07** | Disponibilizar um painel público e aberto com visualização das escalas e listagem de check-ins ativos (sem dados sensíveis) para acesso de pais e membros. |
+| **RF-07** | Disponibilizar um painel público e aberto com visualização das escalas, mídias/cifras para estudo e listagem de check-ins ativos (sem dados sensíveis) para acesso de pais e membros. |
 | **RF-08** | O administrador deve poder gerenciar e cadastrar novos operadores, incluindo atualização de senhas e exclusão de contas. |
 | **RF-09** | O sistema deve computar em tempo real e emitir relatórios de assiduidade e aproveitamento dos voluntários com base nas escalas. |
 
