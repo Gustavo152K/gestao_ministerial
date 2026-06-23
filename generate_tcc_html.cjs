@@ -248,7 +248,7 @@ const htmlContent = `<!DOCTYPE html>
               </tr>
               <tr>
                 <td class="px-6 py-3 font-semibold border-b">RF-03</td>
-                <td class="px-6 py-3 border-b">Os operadores devem gerenciar escalas indicando data, ministério responsável, status e membros alocados.</td>
+                <td class="px-6 py-3 border-b">Os operadores devem gerenciar escalas indicando data, ministério responsável, status de presença dos voluntários (Confirmada, Falta Justificada, Falta Sem Justificativa) e membros alocados.</td>
               </tr>
               <tr>
                 <td class="px-6 py-3 font-semibold border-b">RF-04</td>
@@ -267,8 +267,12 @@ const htmlContent = `<!DOCTYPE html>
                 <td class="px-6 py-3 border-b">Disponibilizar um painel público e aberto com visualização das escalas e listagem de check-ins ativos (sem dados sensíveis) para acesso de pais e membros.</td>
               </tr>
               <tr>
-                <td class="px-6 py-3 font-semibold">RF-08</td>
-                <td class="px-6 py-3">O administrador deve poder gerenciar e cadastrar novos operadores, incluindo atualização de senhas e exclusão de contas.</td>
+                <td class="px-6 py-3 font-semibold border-b">RF-08</td>
+                <td class="px-6 py-3 border-b">O administrador deve poder gerenciar e cadastrar novos operadores, incluindo atualização de senhas e exclusão de contas.</td>
+              </tr>
+              <tr>
+                <td class="px-6 py-3 font-semibold">RF-09</td>
+                <td class="px-6 py-3">O sistema deve computar em tempo real e emitir relatórios de assiduidade e aproveitamento dos voluntários com base nas escalas.</td>
               </tr>
             </tbody>
           </table>
@@ -524,7 +528,7 @@ const htmlContent = `<!DOCTYPE html>
               <td class="px-4 py-2 font-mono">detalhes_voluntarios</td>
               <td class="px-4 py-2">TEXT</td>
               <td class="px-4 py-2">NOT NULL</td>
-              <td class="px-4 py-2">String JSON serializada que armazena os membros e funções alocadas.</td>
+              <td class="px-4 py-2">String JSON contendo o array de voluntários alocados e seu respectivo status de presença (id, nome, funcao, presenca).</td>
             </tr>
           </tbody>
         </table>

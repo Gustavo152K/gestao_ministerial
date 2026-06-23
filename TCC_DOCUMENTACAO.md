@@ -93,12 +93,13 @@ No coração da segurança do Supabase está o conceito de **Row Level Security 
 |---|---|
 | **RF-01** | O sistema deve autenticar operadores por meio de e-mail e senha. |
 | **RF-02** | Os operadores autenticados devem criar, ler, editar e excluir membros e suas respectivas funções na igreja. |
-| **RF-03** | Os operadores devem gerenciar escalas indicando data, ministério responsável, status e membros alocados. |
+| **RF-03** | Os operadores devem gerenciar escalas indicando data, ministério responsável, status de presença dos voluntários (Confirmada, Falta Justificada, Falta Sem Justificativa) e membros alocados. |
 | **RF-04** | O sistema deve permitir o upload de conteúdos (texto/URLs) no repositório de mídias categorizados por ministério. |
 | **RF-05** | O sistema deve possibilitar o check-in de crianças no Espaço Kids registrando dados do responsável, telefone de contato e alergias. |
 | **RF-06** | O sistema deve gerenciar a saída (check-out) de crianças, calculando o tempo de permanência e arquivando-as no histórico permanente de presença. |
 | **RF-07** | Disponibilizar um painel público e aberto com visualização das escalas e listagem de check-ins ativos (sem dados sensíveis) para acesso de pais e membros. |
 | **RF-08** | O administrador deve poder gerenciar e cadastrar novos operadores, incluindo atualização de senhas e exclusão de contas. |
+| **RF-09** | O sistema deve computar em tempo real e emitir relatórios de assiduidade e aproveitamento dos voluntários com base nas escalas. |
 
 ### 3.2 Requisitos Não Funcionais (RNF)
 
@@ -144,7 +145,7 @@ Mapeia as escalas de cultos e voluntários escalados.
 * `data_escala` (TIMESTAMPTZ, NOT NULL): Data e horário da escala.
 * `ministerio_responsavel` (TEXT, NOT NULL): Nome do ministério.
 * `status` (TEXT, NOT NULL): Confirmada, Pendente ou Cancelada.
-* `detalhes_voluntarios` (TEXT, NOT NULL): String JSON com array de voluntários escalados.
+* `detalhes_voluntarios` (TEXT, NOT NULL): String JSON contendo o array de voluntários alocados e seu respectivo status de presença (`{"id": number, "nome": string, "funcao": string, "presenca": string}`).
 
 ### Tabela: `kids_checkin`
 Controla o fluxo ativo de crianças presentes no Espaço Kids.
