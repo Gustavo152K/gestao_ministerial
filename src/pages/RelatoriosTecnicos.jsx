@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-import { ArrowLeft, BarChart3, Users, CheckCircle, XCircle, Filter, FileText, Search, Calendar, Loader2 } from 'lucide-react';
+import { ArrowLeft, BarChart3, Users, CheckCircle, XCircle, Filter, FileText, Search, Calendar, Loader2, Download } from 'lucide-react';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 function RelatoriosTecnicos() {
   const navigate = useNavigate();
@@ -175,6 +177,220 @@ function RelatoriosTecnicos() {
     return matchesTexto && matchesData;
   });
 
+  const cleanText = (str) => {
+    if (!str) return '';
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  };
+
+  const exportarPDFVoluntarios = () => {
+    try {
+      const doc = new jsPDF();
+
+      // Configuração básica do PDF
+      doc.setFont("helvetica", "normal");
+      
+      // Cabeçalho do PDF
+      doc.setFillColor(17, 24, 39); // Gray 900
+      doc.rect(0, 0, 210, 35, 'F');
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(22);
+      doc.setFont("helvetica", "bold");
+      doc.text(cleanText("GESTÃO MINISTERIAL"), 14, 18);
+      
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(209, 213, 219); // Gray 300
+      doc.text(cleanText("RELATÓRIO DE VOLUNTÁRIOS E MÉTRICAS DE PRESENÇA"), 14, 28);
+      
+      // Linha separadora azul
+      doc.setFillColor(37, 99, 235); // Blue 600
+      doc.rect(0, 35, 210, 3, 'F');
+
+      // Metadata
+      doc.setTextColor(75, 85, 99); // Gray 600
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "italic");
+      const dataGeracao = new Date().toLocaleString('pt-BR');
+      doc.text(cleanText(`Gerado em: ${dataGeracao}`), 14, 48);
+      
+      // Filtros
+      doc.setFont("helvetica", "bold");
+      doc.text(cleanText(`Filtros: Ministério: Todos | Escalas ativas no sistema`), 14, 54);
+
+      // Caixa de Indicadores (Metricas)
+      doc.setDrawColor(209, 213, 219); // Gray 300
+      doc.setFillColor(249, 250, 251); // Gray 50
+      doc.roundedRect(14, 62, 182, 30, 2, 2, 'FD');
+      
+      // Texto dentro da caixa de indicadores
+      doc.setTextColor(17, 24, 39); // Gray 900
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      
+      doc.text(cleanText("Métricas Consolidadas:"), 18, 68);
+      
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.text(cleanText(`- Vagas Escaladas: ${indicadoresVoluntarios.vagasEscaladas}`), 18, 76);
+      doc.text(cleanText(`- Taxa de Presença: ${indicadoresVoluntarios.taxaPresenca}%`), 18, 84);
+      doc.text(cleanText(`- Faltas Justificadas: ${indicadoresVoluntarios.faltasJustificadas}`), 100, 76);
+      doc.text(cleanText(`- Faltas Sem Justificativa: ${indicadoresVoluntarios.faltasSemJustificativa}`), 100, 84);
+
+      // Tabela de detalhamento
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.setTextColor(17, 24, 39); // Gray 900
+      doc.text(cleanText("Detalhamento por Voluntário"), 14, 104);
+
+      const tableData = voluntarios.map(v => [
+        v.nome,
+        v.ministerio,
+        v.escalas.toString(),
+        v.presencas.toString(),
+        v.aproveitamento
+      ]);
+
+      const cleanedHeaders = ['Voluntário', 'Ministério', 'Escalas Totais', 'Presenças', 'Aproveitamento'].map(cleanText);
+      const cleanedBody = tableData.map(row => row.map(cleanText));
+
+      autoTable(doc, {
+        startY: 110,
+        head: [cleanedHeaders],
+        body: cleanedBody,
+        headStyles: {
+          fillColor: [17, 24, 39], // Gray 900
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          fontSize: 10,
+          halign: 'left'
+        },
+        alternateRowStyles: {
+          fillColor: [249, 250, 251] // Gray 50
+        },
+        styles: {
+          fontSize: 9,
+          cellPadding: 4,
+          textColor: [55, 65, 81] // Gray 700
+        },
+        columnStyles: {
+          2: { halign: 'center' },
+          3: { halign: 'center' },
+          4: { halign: 'center' }
+        }
+      });
+
+      doc.save(`relatorio_voluntarios_${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (error) {
+      console.error("Erro ao gerar PDF de voluntários:", error);
+      alert("Ocorreu um erro ao gerar o PDF dos voluntários. Por favor, tente novamente.");
+    }
+  };
+
+  const exportarPDFKids = () => {
+    try {
+      const doc = new jsPDF();
+
+      // Configuração básica do PDF
+      doc.setFont("helvetica", "normal");
+      
+      // Cabeçalho do PDF
+      doc.setFillColor(17, 24, 39); // Gray 900
+      doc.rect(0, 0, 210, 35, 'F');
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(22);
+      doc.setFont("helvetica", "bold");
+      doc.text(cleanText("GESTÃO MINISTERIAL"), 14, 18);
+      
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(209, 213, 219); // Gray 300
+      doc.text(cleanText("RELATÓRIO DE ACESSO - ESPAÇO KIDS"), 14, 28);
+      
+      // Linha separadora azul
+      doc.setFillColor(37, 99, 235); // Blue 600
+      doc.rect(0, 35, 210, 3, 'F');
+
+      // Metadata
+      doc.setTextColor(75, 85, 99); // Gray 600
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "italic");
+      const dataGeracao = new Date().toLocaleString('pt-BR');
+      doc.text(cleanText(`Gerado em: ${dataGeracao}`), 14, 48);
+      
+      // Filtros
+      let filtrosTexto = "Nenhum filtro aplicado";
+      if (buscaKids || filtroData) {
+        const partes = [];
+        if (buscaKids) partes.push(`Busca: "${buscaKids}"`);
+        if (filtroData) {
+          const dataFormatada = filtroData.split('-').reverse().join('/');
+          partes.push(`Data: ${dataFormatada}`);
+        }
+        filtrosTexto = partes.join(" | ");
+      }
+      doc.setFont("helvetica", "bold");
+      doc.text(cleanText(`Filtros ativos: ${filtrosTexto}`), 14, 54);
+
+      // Tabela de logs
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.setTextColor(17, 24, 39); // Gray 900
+      doc.text(cleanText("Controle de Dias e Horários - Kids"), 14, 68);
+
+      const tableData = logsFiltrados.map(log => {
+        const dataFormatada = new Date(log.created_at).toLocaleDateString('pt-BR');
+        const responsavelTexto = log.telefone ? `${log.responsavel} (${log.telefone})` : log.responsavel;
+        const statusTexto = log.status === 'Check-in Realizado' ? 'Presente' : log.status === 'Finalizado' ? 'Liberado' : 'Pendente';
+        const horaSaidaTexto = log.status === 'Check-in Realizado' ? 'Na Sala' : (log.hora_saida || 'N/A');
+        
+        return [
+          dataFormatada,
+          log.nome_crianca || 'N/A',
+          responsavelTexto || 'N/A',
+          log.hora_entrada || 'N/A',
+          horaSaidaTexto,
+          statusTexto
+        ];
+      });
+
+      const cleanedHeaders = ['Data', 'Criança', 'Responsável / Contato', 'Entrada', 'Saída', 'Status'].map(cleanText);
+      const cleanedBody = tableData.map(row => row.map(cleanText));
+
+      autoTable(doc, {
+        startY: 74,
+        head: [cleanedHeaders],
+        body: cleanedBody,
+        headStyles: {
+          fillColor: [17, 24, 39], // Gray 900
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          fontSize: 10,
+          halign: 'left'
+        },
+        alternateRowStyles: {
+          fillColor: [249, 250, 251] // Gray 50
+        },
+        styles: {
+          fontSize: 9,
+          cellPadding: 4,
+          textColor: [55, 65, 81] // Gray 700
+        },
+        columnStyles: {
+          3: { halign: 'center' },
+          4: { halign: 'center' },
+          5: { halign: 'center' }
+        }
+      });
+
+      doc.save(`relatorio_kids_${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (error) {
+      console.error("Erro ao gerar PDF do Espaço Kids:", error);
+      alert("Ocorreu um erro ao gerar o PDF do Espaço Kids. Por favor, tente novamente.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-4 md:p-8 font-sans">
       
@@ -264,9 +480,17 @@ function RelatoriosTecnicos() {
                 </div>
 
                 <section>
-                  <h2 className="text-2xl font-extrabold text-gray-900 mb-6 flex items-center gap-3 border-b-2 border-gray-300 pb-2">
-                    <BarChart3 className="text-blue-800" size={28} /> Detalhamento por Voluntário
-                  </h2>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-2 border-gray-300 pb-2 mb-6">
+                    <h2 className="text-2xl font-extrabold text-gray-900 flex items-center gap-3">
+                      <BarChart3 className="text-blue-800" size={28} /> Detalhamento por Voluntário
+                    </h2>
+                    <button
+                      onClick={exportarPDFVoluntarios}
+                      className="flex items-center justify-center gap-2 bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded-lg border border-blue-800 shadow transition-all uppercase tracking-wider text-xs cursor-pointer"
+                    >
+                      <Download size={16} /> Exportar PDF
+                    </button>
+                  </div>
                   
                   {voluntarios.length > 0 ? (
                     <div className="overflow-x-auto border-2 border-gray-400 rounded-lg">
@@ -356,9 +580,17 @@ function RelatoriosTecnicos() {
               </div>
             ) : (
               <section key="kids-history-section">
-                <h2 className="text-2xl font-extrabold text-gray-900 mb-6 flex items-center gap-3 border-b-2 border-gray-300 pb-2">
-                  <FileText className="text-blue-800" size={28} /> Controle de Dias e Horários - Kids
-                </h2>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-2 border-gray-300 pb-2 mb-6">
+                  <h2 className="text-2xl font-extrabold text-gray-900 flex items-center gap-3">
+                    <FileText className="text-blue-800" size={28} /> Controle de Dias e Horários - Kids
+                  </h2>
+                  <button
+                    onClick={exportarPDFKids}
+                    className="flex items-center justify-center gap-2 bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded-lg border border-blue-800 shadow transition-all uppercase tracking-wider text-xs cursor-pointer"
+                  >
+                    <Download size={16} /> Exportar PDF
+                  </button>
+                </div>
                 
                 {logsFiltrados.length > 0 ? (
                   <div key="kids-history-table" className="overflow-x-auto border-2 border-gray-400 rounded-lg">
